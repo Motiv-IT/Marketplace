@@ -26,8 +26,7 @@ class User(BaseModel):
         orm_mode = True 
 
 class Category(BaseModel):
-    title: str
-    content: Optional[str] = None    
+    title: str   
     class Config():
         orm_mode = True 
 
@@ -72,8 +71,7 @@ class AdvertisementDisplay(BaseModel):
 
 #----------category schemas----------
 class CategoryBase(BaseModel):
-    title: str
-    content: Optional[str] = None   
+    title: str   
 
 class CategoryDisplay(BaseModel):
     title: str

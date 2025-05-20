@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from db import model
 from db.database import engine
+from router import advertisement, user, category
 
 app = FastAPI()
 
-@app.get('/')
-def get_root():
-    return 200
+app.include_router(advertisement.router)
+app.include_router(user.router)
+app.include_router(category.router)
 
-model.Base.metadata.create_all(engine)   
+model.Base.metadata.create_all(engine)
