@@ -21,10 +21,12 @@ def get_searched_advertisements(search: str, db: Session = Depends(get_db)):
             response_model=List[AdvertisementDisplay])
 def get_filtered_advertisements(category_id: int, db: Session = Depends(get_db)):
     return db_advertisement.get_category_filtered_advertisements(db, category_id )
+
 #--------- get list of sorted by date of creation ads----------
-@router.get('/sorted_by_date')
+@router.get('/sorted_by_date', response_model=List[AdvertisementDisplay])
 def get_sorted_advertisements(db: Session = Depends(get_db)):
     return db_advertisement.get_sorted_advertisements(db)
+
 #----------get list of combined filtered ads------------------
 @router.get('/search/category-keyword', summary='Search Ads by Keyword + Category',
             description='this API call enables user to serach by keyword and filter by category',
@@ -32,7 +34,7 @@ def get_sorted_advertisements(db: Session = Depends(get_db)):
 def get_filtered_advertisements(search: Optional[str] = None, category_id: Optional[int] = None, db: Session = Depends(get_db)):
     return db_advertisement.get_filtered_advertisements(db, search, category_id)
 
-#create ads
+#----------------create ads----------------------
 @router.post('/', summary='Create new Ads' , response_model=AdvertisementDisplay)
 def create_ads(request: AdvertisementBase, db: Session = Depends(get_db)):
     return db_advertisement.create_advertisement(db, request)
