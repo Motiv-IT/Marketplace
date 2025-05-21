@@ -3,3 +3,12 @@ uvicorn
 sqlalchemy
 passlib
 bcrypt
+SQLAlchemy
+pydantic
+databases
+passlib
+bcrypt
+websockets
+sqlalchemy
+passlib
+bcrypt
