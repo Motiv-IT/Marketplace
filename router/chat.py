@@ -1,5 +1,8 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session
+from db.model import DbAdvertisement
+from db.database import get_db
 
 #begin Tina
 router = APIRouter()
@@ -56,7 +59,7 @@ async def get_chat_page(user_id: int):
     return HTMLResponse(html)
 
 @router.websocket("/chat/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: int):
+async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = Depends(get_db)):
     await websocket.accept()
     active_connections[user_id] = websocket
     try:
@@ -66,10 +69,13 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
             ad_id = int(data["advertisement_id"])
             message = data["message"]
 
-            if receiver_id in active_connections:
+            # Check if the receiver owns the advertisement
+            ad = db.query(DbAdvertisement).filter_by(id=ad_id, user_id=receiver_id).first()
+            if ad and receiver_id in active_connections:
                 await active_connections[receiver_id].send_text(
                     f"User {user_id} (ad {ad_id}): {message}"
                 )
+            # Optionally, you can else send an error or ignore the message
     except WebSocketDisconnect:
         del active_connections[user_id]
         
