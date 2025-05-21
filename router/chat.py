@@ -5,7 +5,10 @@ from db.model import DbAdvertisement
 from db.database import get_db
 
 #begin Tina
-router = APIRouter()
+router=APIRouter(
+    prefix='/chat',
+    tags=["messaging"]
+)
 active_connections = {}
 
 chat_html = """
@@ -53,12 +56,12 @@ chat_html = """
 </html>
 """
 
-@router.get("/chat/{user_id}")
+@router.get("/{user_id}")
 async def get_chat_page(user_id: int):
     html = chat_html.replace("{{user_id}}", str(user_id))
     return HTMLResponse(html)
 
-@router.websocket("/chat/{user_id}")
+@router.websocket("/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = Depends(get_db)):
     await websocket.accept()
     active_connections[user_id] = websocket
