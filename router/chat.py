@@ -69,13 +69,18 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
             ad_id = int(data["advertisement_id"])
             message = data["message"]
 
+            # Prevent users from messaging themselves
+            if user_id == receiver_id:
+                await websocket.send_text("Error: You cannot send messages to yourself.")
+                continue  # Skip this message
+            
             # Check if the receiver owns the advertisement
             ad = db.query(DbAdvertisement).filter_by(id=ad_id, user_id=receiver_id).first()
             if ad and receiver_id in active_connections:
                 await active_connections[receiver_id].send_text(
                     f"User {user_id} (ad {ad_id}): {message}"
                 )
-            # Optionally, you can else send an error or ignore the message
+            # Optionally
     except WebSocketDisconnect:
         del active_connections[user_id]
         
