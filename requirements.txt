@@ -1,8 +1,14 @@
 fastapi
 uvicorn
+<<<<<<< HEAD
 SQLAlchemy
 pydantic
 databases
 passlib
 bcrypt
 websockets
+=======
+sqlalchemy
+passlib
+bcrypt
+>>>>>>> origin/Nataliia
