@@ -34,7 +34,3 @@ def get_sorted_advertisements(db: Session = Depends(get_db)):
 def get_filtered_advertisements(search: Optional[str] = None, category_id: Optional[int] = None, db: Session = Depends(get_db)):
     return db_advertisement.get_filtered_advertisements(db, search, category_id)
 
-#----------------create ads----------------------
-@router.post('/', summary='Create new Ads' , response_model=AdvertisementDisplay)
-def create_ads(request: AdvertisementBase, db: Session = Depends(get_db)):
-    return db_advertisement.create_advertisement(db, request)

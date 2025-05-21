@@ -48,21 +48,7 @@ def get_filtered_advertisements(db: Session, keyword: Optional[str] = None, cate
          raise HTTPException(status_code=404, detail="No advertisements found.")
     return ads  
 
-# create ads
-def create_advertisement(db: Session, request: AdvertisementBase):
-    new_ads = DbAdvertisement(
-        title = request.title,
-        content = request.content,
-        price = request.price,
-        status = request.status,
-        user_id = request.user_id,
-        category_id = request.category_id
 
-    )
-    db.add(new_ads)
-    db.commit()
-    db.refresh(new_ads)
-    return new_ads
 
 
 
