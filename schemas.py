@@ -70,6 +70,21 @@ class AdvertisementDisplay(BaseModel):
     class Config():
         orm_mode = True 
 
+#begin Nataliia
+#for editing  - not possible to change user_id and created_at
+class AdvertisementEditBase(BaseModel):
+    title: str
+    content: str
+    price: float
+    status: StatusAdvertisementEnum
+    category_id: int
+
+#for updating status
+class AdvertisementStatusDisplay(BaseModel):
+    status: StatusAdvertisementEnum
+    class Config():
+        orm_mode = True 
+#end Nataliia
 #----------category schemas----------
 class CategoryBase(BaseModel):
     title: str
