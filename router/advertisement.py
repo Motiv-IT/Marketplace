@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementStatusDisplay
 from db import db_advertisement
-from schemas import AdvertisementDisplay, AdvertisementBase
 from typing import List, Optional
 from db.database import get_db
+from typing import List
+from sqlalchemy.orm.session import Session
 
 router = APIRouter(
     prefix='/advertisement',
@@ -34,20 +36,6 @@ def get_sorted_advertisements(db: Session = Depends(get_db)):
 def get_filtered_advertisements(search: Optional[str] = None, category_id: Optional[int] = None, db: Session = Depends(get_db)):
     return db_advertisement.get_filtered_advertisements(db, search, category_id)
 
-
-from typing import List
-from fastapi import  APIRouter
-from fastapi import Depends
-from sqlalchemy.orm.session import Session
-
-from db import db_advertisement
-from db.database import get_db
-from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementStatusDisplay
-
-router=APIRouter(
-    prefix='/adv',
-    tags=["advertisement"]
-)
 #creating one advertisement
 @router.post('/create',response_model=AdvertisementDisplay)
 def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db)):

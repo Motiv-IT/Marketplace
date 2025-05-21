@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Session
-from db.model import DbAdvertisement
-from fastapi import HTTPException
+from sqlalchemy.orm import Session,joinedload
+from sqlalchemy.orm.session import Session
 from typing import Optional
-from schemas import AdvertisementBase
+from fastapi import HTTPException,status
+from db.database import get_db
+from db.model import DbAdvertisement, DbCategory, DbUser
+from schemas import AdvertisementBase, AdvertisementEditBase, AdvertisementStatusDisplay, StatusAdvertisementEnum
 
 #---------- get ads based on search by keabord-------------
 def get_searched_advertisements(db: Session, keyword: str):
@@ -46,12 +48,6 @@ def get_filtered_advertisements(db: Session, keyword: Optional[str] = None, cate
          raise HTTPException(status_code=404, detail="No advertisements found.")
     return ads  
 
-from fastapi import HTTPException,status
-from sqlalchemy.orm.session import Session
-from db.database import get_db
-from db.model import DbAdvertisement, DbCategory, DbUser
-from schemas import AdvertisementBase, AdvertisementEditBase, AdvertisementStatusDisplay, StatusAdvertisementEnum
-from sqlalchemy.orm import joinedload
 
 #creating one advertisement
 def create_advertisement(db:Session,request:AdvertisementBase):
