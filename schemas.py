@@ -10,7 +10,9 @@ from datetime import datetime
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    name: str
+    username: str
+    class Config:
+        orm_mode = True
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -18,9 +20,9 @@ class UserLogin(BaseModel):
 
 class UserOut(BaseModel):
     id: int
-    name: str
+    username: str
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 #----------advertisement schemas------------
 class StatusAdvertisementEnum(str, enum.Enum):
