@@ -7,7 +7,7 @@ from db.database import get_db
 #begin Tina
 router=APIRouter(
     prefix='/chat',
-    tags=["messaging"]
+    tags=["Messaging"]
 )
 active_connections = {}
 

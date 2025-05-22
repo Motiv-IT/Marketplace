@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 
 router = APIRouter(
     prefix='/advertisement',
-    tags=['advertisement']
+    tags=['Advertisement']
 )
 #------- get list of searched ads by keyword------------
 @router.get('/search', summary='Search Ads by keyword',

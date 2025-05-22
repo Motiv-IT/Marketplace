@@ -9,7 +9,7 @@ from schemas import CategoryBase, CategoryDisplay
 
 router=APIRouter(
     prefix='/cat',
-    tags=["category"]
+    tags=["Category"]
 )
 
 @router.post('/create',response_model=CategoryDisplay)

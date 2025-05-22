@@ -1,8 +1,28 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import enum
 from datetime import datetime
 
+
+
+#---------user schemas----------
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(BaseModel):
+    id: int
+    name: str
+    class Config:
+        from_attributes = True
+
+#----------advertisement schemas------------
 class StatusAdvertisementEnum(str, enum.Enum):
     OPEN = "OPEN"
     SOLD = "SOLD"
@@ -94,8 +114,9 @@ class CategoryDisplay(BaseModel):
     class Config():
         orm_mode = True  
 
+
 AdvertisementDisplay.model_rebuild()
 CategoryDisplay.model_rebuild()        
-     
+    
 
 

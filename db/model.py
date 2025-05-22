@@ -5,6 +5,7 @@ import enum
 from sqlalchemy import Enum as SqlEnum
 from datetime import datetime
 
+
 # Enum Class for defining status of ads
 class StatusAdvertisementEnum(str, enum.Enum):
     OPEN = "OPEN"
