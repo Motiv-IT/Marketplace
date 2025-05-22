@@ -6,6 +6,7 @@ from sqlalchemy import Enum as SqlEnum
 from datetime import datetime
 
 
+
 # Enum Class for defining status of ads
 class StatusAdvertisementEnum(str, enum.Enum):
     OPEN = "OPEN"
@@ -16,8 +17,9 @@ class DbUser (Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=False)
-    email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=False)
+    email = Column(String, index=True, nullable=False, unique=True)
+    # password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
     address = Column(String)
     phone = Column(String)
     advertisements = relationship('DbAdvertisement', back_populates='user')
