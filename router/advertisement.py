@@ -6,13 +6,14 @@ from typing import List, Optional
 from db.database import get_db
 from typing import List
 from sqlalchemy.orm.session import Session
+from utils.security import oauth2_scheme
 
 router = APIRouter(
     prefix='/advertisement',
     tags=['Advertisement']
 )
 #------- get list of searched ads by keyword------------
-@router.get('/search', summary='Search Ads by keyword',
+@router.get('/search/keyword', summary='Search Ads by keyword',
             description='this API call enables user to search by keybords', response_model=List[AdvertisementDisplay])
 def get_searched_advertisements(search: str, db: Session = Depends(get_db)):
     return db_advertisement.get_searched_advertisements(db, search)
@@ -38,7 +39,7 @@ def get_filtered_advertisements(search: Optional[str] = None, category_id: Optio
 
 #creating one advertisement
 @router.post('/create',response_model=AdvertisementDisplay)
-def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db)):
+def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
     return  db_advertisement.create_advertisement(db,request)
    
 #selecting all advertisements
@@ -53,15 +54,15 @@ def get_one_advertisement(id:int,db:Session=Depends(get_db)):
 
 #editing  one advertisement
 @router.patch('/{id}/edit',response_model=AdvertisementDisplay)
-def edit_advertisement(id:int,request:AdvertisementEditBase,db:Session=Depends(get_db)):
+def edit_advertisement(id:int,request:AdvertisementEditBase,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
     return db_advertisement.edit_advertisement(id,request,db)
 
 #deleting one advertisement
 @router.delete('/{id}')
-def delete_advertisement(id:int,db:Session=Depends(get_db)):
+def delete_advertisement(id:int,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
     return db_advertisement.delete_advertisement(id,db)
 
 #updating status of one advertisement
 @router.patch('/{id}/status',response_model=AdvertisementStatusDisplay)
-def status_advertisement(id:int,request:AdvertisementStatusDisplay,db:Session=Depends(get_db)):
+def status_advertisement(id:int,request:AdvertisementStatusDisplay,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
     return db_advertisement.status_advertisement(id,request,db)

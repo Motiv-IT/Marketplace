@@ -1,39 +1,17 @@
 
 import re
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from passlib.context import CryptContext
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from db.model import DbUser
 from schemas import UserCreate, UserOut
 from db.database import get_db
-
-
+from utils.security import hash_password,verify_password,create_access_token,ALGORITHM,SECRET_KEY,oauth2_scheme
 
 router = APIRouter()
 
-SECRET_KEY = "your_secret_key_here_change_this"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
 blacklisted_tokens = set()
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def validate_password(password: str):
     if len(password) < 8 or len(password) > 20:
