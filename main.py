@@ -17,10 +17,12 @@ Base.metadata.create_all(bind=engine)  # Create tables on startup
 
 app = FastAPI(title="User Rating System")
 
-app.include_router(rating_router)
+
 #------syed ----end
 
 app.include_router(chat.router)
+app.include_router(rating_router)
+
 
 @app.get("/")
 def root():
