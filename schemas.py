@@ -94,11 +94,11 @@ class AdvertisementDisplay(BaseModel):
 #begin Nataliia
 #for editing  - not possible to change user_id and created_at
 class AdvertisementEditBase(BaseModel):
-    title: str
-    content: str
-    price: float
-    status: StatusAdvertisementEnum
-    category_id: int
+    title: Optional[str] = None
+    content: Optional[str] = None
+    price: Optional[float] = None
+    status: Optional[StatusAdvertisementEnum] = None
+    category_id: Optional[int] = None
 
 #for updating status
 class AdvertisementStatusDisplay(BaseModel):

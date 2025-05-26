@@ -115,33 +115,28 @@ def get_one_advertisement(id: int, db: Session):
 
 # editing one advertisement
 def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session):
-    advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
+    advertisement=db.query(DbAdvertisement).filter(DbAdvertisement.id==id).first()
     if not advertisement:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Advertisement with id {id} does not exist",
-        )
-
-    category = db.query(DbCategory).filter(DbCategory.id == request.category_id).first()
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Category with id {request.category_id} not found",
-        )
-
-    if request.price <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Price must be more than 0"
-        )
-
-    advertisement.title = request.title
-    advertisement.content = request.content
-    advertisement.price = request.price
-    advertisement.status = request.status
-    advertisement.category_id = request.category_id
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'Advertisement with id {id} does not exist')  
+    
+    update_data = request.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        if getattr(advertisement, key) != value:
+            if key=="category_id":
+                   category = db.query(DbCategory).filter(DbCategory.id == request.category_id).first()
+                   if not category:
+                     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Category with id {request.category_id} not found")
+            if key=="price":
+                if value <=0:
+                      raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Price should be more than 0")
+            setattr(advertisement, key, value)
     db.commit()
     db.refresh(advertisement)
-    return advertisement
+    return  advertisement
+    
 
 
 # deleting one advertisement
