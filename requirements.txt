@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+passlib
+bcrypt
+databases
+websockets
+JWT
+OAuth2PasswordBeare
+python-jose[cryptography]
+pydantic[email]
+python-multipart
