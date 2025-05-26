@@ -122,3 +122,22 @@ CategoryDisplay.model_rebuild()
     
 
 
+#--------------- Rating user and user Schemas ---------
+#----------Sayed sprint2-------------
+
+class RatingCreate(BaseModel):
+    transaction_id: str
+    rater_id: str
+    score: int
+    comment: Optional[str] = None
+
+class RatingOut(BaseModel):
+    id: str
+    transaction_id: str
+    rater_id: str
+    ratee_id: str
+    score: int
+    comment: Optional[str]
+
+    class Config:
+        orm_mode = True
