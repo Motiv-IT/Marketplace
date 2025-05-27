@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.session import Session
+from sqlalchemy import func
 from typing import Optional
 from fastapi import HTTPException, status
 from db.database import get_db
-from db.model import DbAdvertisement, DbCategory, DbUser
+from db.model import DbAdvertisement, DbCategory, DbUser, DbRating
 from schemas import (
     AdvertisementBase,
     AdvertisementEditBase,
@@ -47,7 +48,11 @@ def get_sorted_advertisements(db: Session):
 def get_filtered_advertisements(
     db: Session, keyword: Optional[str] = None, category_id: Optional[int] = None
 ):
-    query = db.query(DbAdvertisement)
+    query = (
+        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
+        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
+        .group_by(DbAdvertisement.id)
+    )
 
     if keyword:
         query = query.filter(
@@ -56,9 +61,15 @@ def get_filtered_advertisements(
         )
     if category_id:
         query = query.filter(DbAdvertisement.category_id == category_id)
-    ads = query.order_by(DbAdvertisement.created_at.desc()).all()
 
-    return ads
+    advertisement = query.order_by(
+        DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc()
+    ).all()
+
+    return [
+        {"advertisement": ad, "average_rating": avg_rating}
+        for ad, avg_rating in advertisement
+    ]
 
 
 # creating one advertisement
@@ -97,46 +108,70 @@ def create_advertisement(db: Session, request: AdvertisementBase):
     return new_adv
 
 
-# selecting all advertisements
+# selecting all advertisements which are ranked by recency and user rating
 def get_all_advertisements(db: Session):
-    return db.query(DbAdvertisement).all()
+    result = (
+        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
+        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
+        .group_by(DbAdvertisement.id)
+        .order_by(DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc())
+        .all()
+    )
+    ad, avg_rating = result
+    return [{"advertisement": ad, "average_rating": avg_rating}]
 
 
 # selecting one  advertisement
 def get_one_advertisement(id: int, db: Session):
+    advertisement = (
+        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
+        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
+        .filter(DbAdvertisement.id == id)
+        .group_by(DbAdvertisement.id)
+        .first()
+    )
+    if not advertisement:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Advertisement with id {id} does not exist",
+        )
+    ad, avg_rating = advertisement
+    return {"advertisement": ad, "average_rating": avg_rating}
+
+
+# editing one advertisement
+def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
     if not advertisement:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Advertisement with id {id} does not exist",
         )
-    return advertisement
 
-
-# editing one advertisement
-def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session):
-    advertisement=db.query(DbAdvertisement).filter(DbAdvertisement.id==id).first()
-    if not advertisement:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                             detail=f'Advertisement with id {id} does not exist')  
-    
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         if getattr(advertisement, key) != value:
-            if key=="category_id":
-                   category = db.query(DbCategory).filter(DbCategory.id == request.category_id).first()
-                   if not category:
-                     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Category with id {request.category_id} not found")
-            if key=="price":
-                if value <=0:
-                      raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Price should be more than 0")
+            if key == "category_id":
+                category = (
+                    db.query(DbCategory)
+                    .filter(DbCategory.id == request.category_id)
+                    .first()
+                )
+                if not category:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Category with id {request.category_id} not found",
+                    )
+            if key == "price":
+                if value <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Price should be more than 0",
+                    )
             setattr(advertisement, key, value)
     db.commit()
     db.refresh(advertisement)
-    return  advertisement
-    
+    return advertisement
 
 
 # deleting one advertisement

@@ -1,30 +1,35 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 import enum
 from datetime import datetime
 
 
+# ---------user schemas----------
 
-#---------user schemas----------
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     username: str
+
     class Config:
         orm_mode = True
+
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+
 class UserOut(BaseModel):
     id: int
     username: str
+
     class Config:
         orm_mode = True
 
-#----------advertisement schemas------------
+
+# ----------advertisement schemas------------
 class StatusAdvertisementEnum(str, enum.Enum):
     OPEN = "OPEN"
     SOLD = "SOLD"
@@ -36,24 +41,29 @@ class Advertisement(BaseModel):
     content: str
     price: float
     status: StatusAdvertisementEnum
-    class Config():
+
+    class Config:
         orm_mode = True
+
 
 class User(BaseModel):
     username: str
     email: str
     address: Optional[str] = None
     phone: Optional[str] = None
-    class Config():
-        orm_mode = True 
+
+    class Config:
+        orm_mode = True
+
 
 class Category(BaseModel):
-    title: str   
-    class Config():
-        orm_mode = True 
+    title: str
+
+    class Config:
+        orm_mode = True
 
 
-#---------user schemas----------
+# ---------user schemas----------
 class UserBase(BaseModel):
     username: str
     email: str
@@ -64,13 +74,14 @@ class UserBase(BaseModel):
 
 class UserDisplay(BaseModel):
     username: str
-    email:str
+    email: str
     advertisements: List[Advertisement]
-    class Config():
-        orm_mode = True 
+
+    class Config:
+        orm_mode = True
 
 
-#----------advertisement schemas------------
+# ----------advertisement schemas------------
 class AdvertisementBase(BaseModel):
     title: str
     content: str
@@ -79,7 +90,8 @@ class AdvertisementBase(BaseModel):
     created_at: datetime
     user_id: int
     category_id: int
-    
+
+
 class AdvertisementDisplay(BaseModel):
     title: str
     content: str
@@ -88,11 +100,13 @@ class AdvertisementDisplay(BaseModel):
     created_at: datetime
     user: User
     category: Category
-    class Config():
-        orm_mode = True 
 
-#begin Nataliia
-#for editing  - not possible to change user_id and created_at
+    class Config:
+        orm_mode = True
+
+
+# begin Nataliia
+# for editing  - not possible to change user_id and created_at
 class AdvertisementEditBase(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
@@ -100,25 +114,43 @@ class AdvertisementEditBase(BaseModel):
     status: Optional[StatusAdvertisementEnum] = None
     category_id: Optional[int] = None
 
-#for updating status
+
+# for updating status
 class AdvertisementStatusDisplay(BaseModel):
     status: StatusAdvertisementEnum
-    class Config():
-        orm_mode = True 
-#end Nataliia
-#----------category schemas----------
+
+    class Config:
+        orm_mode = True
+
+
+# end Nataliia
+# ----------category schemas----------
 class CategoryBase(BaseModel):
-    title: str   
+    title: str
+
 
 class CategoryDisplay(BaseModel):
     title: str
-    advertisements: List[Advertisement]  
-    class Config():
-        orm_mode = True  
+    advertisements: List[Advertisement]
+
+    class Config:
+        orm_mode = True
 
 
 AdvertisementDisplay.model_rebuild()
-CategoryDisplay.model_rebuild()        
-    
+CategoryDisplay.model_rebuild()
 
 
+# ----------Rating Schemas---------
+class RatingBase(BaseModel):
+    score: int = Field(..., ge=1, le=5)
+    rater_id: int
+    advertisement_id: int
+
+
+class AdvertisementWithRating(BaseModel):
+    advertisement: AdvertisementDisplay
+    average_rating: Optional[float]
+
+    class Config:
+        orm_mode = True
