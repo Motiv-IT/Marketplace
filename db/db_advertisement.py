@@ -19,7 +19,8 @@ def get_filtered_advertisements(
 ):
     query = (
         db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
-        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
+        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)\
+        .filter(DbAdvertisement.status == "OPEN")\
         .group_by(DbAdvertisement.id)
     )
 
@@ -86,6 +87,7 @@ def get_all_advertisements(db: Session):
         .order_by(DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc())
         .all()
     )
+    
 
     return [
         {"advertisement": ad, "average_rating": avg_rating} for ad, avg_rating in result
