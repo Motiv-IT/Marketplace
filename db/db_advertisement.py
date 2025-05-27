@@ -2,14 +2,15 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.session import Session
 from typing import Optional
 from fastapi import HTTPException, status
-from db.database import get_db
 from db.model import DbAdvertisement, DbCategory, DbUser
 from schemas import (
     AdvertisementBase,
     AdvertisementEditBase,
     AdvertisementStatusDisplay,
+    StatusChangeAdvertisementEnum,
+    User,
 )
-
+from router.auth import get_current_user
 
 # ---------- get ads based on search by keabord-------------
 def get_searched_advertisements(db: Session, keyword: str):
@@ -62,14 +63,8 @@ def get_filtered_advertisements(
 
 
 # creating one advertisement
-def create_advertisement(db: Session, request: AdvertisementBase):
-    user = db.query(DbUser).filter(DbUser.id == request.user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {request.user_id} not found",
-        )
-
+def create_advertisement(db: Session, request: AdvertisementBase,current_user_id:int):
+   
     category = db.query(DbCategory).filter(DbCategory.id == request.category_id).first()
     if not category:
         raise HTTPException(
@@ -88,7 +83,7 @@ def create_advertisement(db: Session, request: AdvertisementBase):
         price=request.price,
         status=request.status,
         created_at=request.created_at,
-        user_id=request.user_id,
+        user_id=current_user_id,
         category_id=request.category_id,
     )
     db.add(new_adv)
@@ -114,11 +109,16 @@ def get_one_advertisement(id: int, db: Session):
 
 
 # editing one advertisement
-def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session):
+def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session,current_user_id:int):
     advertisement=db.query(DbAdvertisement).filter(DbAdvertisement.id==id).first()
+    
     if not advertisement:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f'Advertisement with id {id} does not exist')  
+    
+    if advertisement.user_id!=current_user_id:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'User  with id {current_user_id} has no write access to make changes to this record')        
     
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -140,26 +140,34 @@ def edit_advertisement(id: int, request: AdvertisementEditBase, db: Session):
 
 
 # deleting one advertisement
-def delete_advertisement(id: int, db: Session):
+def delete_advertisement(id: int, db: Session,current_user_id:int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
     if not advertisement:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Advertisement with id {id} does not exist",
         )
+    if advertisement.user_id!=current_user_id:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'User  with id {current_user_id} has no write access to make changes to this record')        
+   
     db.delete(advertisement)
     db.commit()
     return {"message": f"Advertisement with id {id} has been deleted"}
 
 
 # updating status of one advertisement
-def status_advertisement(id: int, request: AdvertisementStatusDisplay, db: Session):
+def status_advertisement(id: int, request: StatusChangeAdvertisementEnum, db: Session,current_user_id:int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
     if not advertisement:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Advertisement with id {id} does not exist",
         )
+    if advertisement.user_id!=current_user_id:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'User  with id {current_user_id} has no write access to make changes to this record')        
+   
     advertisement.status = request.status
     db.commit()
     db.refresh(advertisement)

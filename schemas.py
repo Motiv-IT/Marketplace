@@ -30,6 +30,12 @@ class StatusAdvertisementEnum(str, enum.Enum):
     SOLD = "SOLD"
     RESERVED = "RESERVED"
 
+#----for CHANGING STATUS-------#
+class StatusChangeAdvertisementEnum(str, enum.Enum):
+    SOLD = "SOLD"
+    RESERVED = "RESERVED"
+
+
 
 class Advertisement(BaseModel):
     title: str
@@ -77,7 +83,6 @@ class AdvertisementBase(BaseModel):
     price: float
     status: StatusAdvertisementEnum
     created_at: datetime
-    user_id: int
     category_id: int
     
 class AdvertisementDisplay(BaseModel):
@@ -102,7 +107,7 @@ class AdvertisementEditBase(BaseModel):
 
 #for updating status
 class AdvertisementStatusDisplay(BaseModel):
-    status: StatusAdvertisementEnum
+    status: StatusChangeAdvertisementEnum
     class Config():
         orm_mode = True 
 #end Nataliia

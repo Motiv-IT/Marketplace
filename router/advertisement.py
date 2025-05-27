@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from router.auth import get_current_user
 from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementStatusDisplay
 from db import db_advertisement
 from typing import List, Optional
@@ -39,8 +40,8 @@ def get_filtered_advertisements(search: Optional[str] = None, category_id: Optio
 
 #creating one advertisement
 @router.post('/create',response_model=AdvertisementDisplay)
-def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
-    return  db_advertisement.create_advertisement(db,request)
+def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
+    return  db_advertisement.create_advertisement(db,request,user_id)
    
 #selecting all advertisements
 @router.get('/all',response_model=List[AdvertisementDisplay])
@@ -54,15 +55,15 @@ def get_one_advertisement(id:int,db:Session=Depends(get_db)):
 
 #editing  one advertisement
 @router.patch('/{id}/edit',response_model=AdvertisementDisplay)
-def edit_advertisement(id:int,request:AdvertisementEditBase,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
-    return db_advertisement.edit_advertisement(id,request,db)
+def edit_advertisement(id:int,request:AdvertisementEditBase,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
+    return db_advertisement.edit_advertisement(id,request,db,user_id)
 
 #deleting one advertisement
 @router.delete('/{id}')
-def delete_advertisement(id:int,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
-    return db_advertisement.delete_advertisement(id,db)
+def delete_advertisement(id:int,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
+    return db_advertisement.delete_advertisement(id,db,user_id)
 
 #updating status of one advertisement
 @router.patch('/{id}/status',response_model=AdvertisementStatusDisplay)
-def status_advertisement(id:int,request:AdvertisementStatusDisplay,db:Session=Depends(get_db),token: str = Depends(oauth2_scheme)):
-    return db_advertisement.status_advertisement(id,request,db)
+def status_advertisement(id:int,request:AdvertisementStatusDisplay,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
+    return db_advertisement.status_advertisement(id,request,db,user_id)

@@ -68,3 +68,24 @@ def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get
         return user
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+
+
+#getting user_id from token
+
+
+def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Token payload invalid")
+
+        user = db.query(DbUser).filter(DbUser.email == email).first()
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return user.id  # return actual user ID
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
