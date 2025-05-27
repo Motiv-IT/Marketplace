@@ -12,39 +12,8 @@ from schemas import (
 )
 
 
-# ---------- get ads based on search by keabord-------------
-def get_searched_advertisements(db: Session, keyword: str):
-    ads = (
-        db.query(DbAdvertisement)
-        .filter(
-            DbAdvertisement.title.ilike(f"%{keyword}%")
-            | DbAdvertisement.content.ilike(f"%{keyword}%")
-        )
-        .order_by(DbAdvertisement.created_at.desc())
-        .all()
-    )
-
-    return ads
-
-
-# ----------- get ads based on filter on category------------
-def get_category_filtered_advertisements(db: Session, category_id: int):
-    ads = (
-        db.query(DbAdvertisement)
-        .filter(DbAdvertisement.category_id == category_id)
-        .order_by(DbAdvertisement.created_at.desc())
-        .all()
-    )
-
-    return ads
-
-
-# ----------- get ads based on recency--------------
-def get_sorted_advertisements(db: Session):
-    return db.query(DbAdvertisement).order_by(DbAdvertisement.created_at.desc()).all()
-
-
-# -----------get ads by combining search by keyword and filtering by category and sorting by recency--------
+# -----------search for desired ads by searching on keyword and filtering by category_id--------
+# -----------------------the result is sorted by recency and rating------------------------------
 def get_filtered_advertisements(
     db: Session, keyword: Optional[str] = None, category_id: Optional[int] = None
 ):
@@ -117,8 +86,10 @@ def get_all_advertisements(db: Session):
         .order_by(DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc())
         .all()
     )
-    ad, avg_rating = result
-    return [{"advertisement": ad, "average_rating": avg_rating}]
+
+    return [
+        {"advertisement": ad, "average_rating": avg_rating} for ad, avg_rating in result
+    ]
 
 
 # selecting one  advertisement

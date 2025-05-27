@@ -17,37 +17,9 @@ from utils.security import oauth2_scheme
 router = APIRouter(prefix="/advertisement", tags=["Advertisement"])
 
 
-# ------- get list of searched ads by keyword------------
+# ----------search for desired ads by searching on keyword and filtering by category_id------------------
 @router.get(
-    "/search/keyword",
-    summary="Search Ads by keyword",
-    description="this API call enables user to search by keybords",
-    response_model=List[AdvertisementDisplay],
-)
-def get_searched_advertisements(search: str, db: Session = Depends(get_db)):
-    return db_advertisement.get_searched_advertisements(db, search)
-
-
-# --------get list of serached ads by category-----------
-@router.get(
-    "/search/category",
-    summary="Search Ads by Category",
-    description="this API call enables user to filter by category",
-    response_model=List[AdvertisementDisplay],
-)
-def get_filtered_advertisements(category_id: int, db: Session = Depends(get_db)):
-    return db_advertisement.get_category_filtered_advertisements(db, category_id)
-
-
-# --------- get list of sorted by date of creation ads----------
-@router.get("/sorted_by_date", response_model=List[AdvertisementDisplay])
-def get_sorted_advertisements(db: Session = Depends(get_db)):
-    return db_advertisement.get_sorted_advertisements(db)
-
-
-# ----------get list of combined filtered ads------------------
-@router.get(
-    "/search/category-keyword",
+    "/search",
     summary="Search Ads by Keyword + Category",
     description="this API call enables user to serach by keyword and filter by category",
     response_model=List[AdvertisementWithRating],
