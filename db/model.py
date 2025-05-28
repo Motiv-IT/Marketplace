@@ -8,11 +8,13 @@ from sqlalchemy import (
     ForeignKey,
     Enum,
     DateTime,
+    Text,
 )
 from sqlalchemy.orm import relationship
 import enum
 from sqlalchemy import Enum as SqlEnum
 from datetime import datetime
+import uuid
 
 
 # Enum Class for defining status of ads
@@ -22,18 +24,26 @@ class StatusAdvertisementEnum(str, enum.Enum):
     RESERVED = "RESERVED"
 
 
+class ScoreTypeEnum(str, enum.Enum):
+    BUYER_SCORE = "BUYER_SCORE"
+    SELLER_SCORE = "SELLER_SCORE"
+
+
 # user table
 class DbUser(Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=False)
     email = Column(String, index=True, nullable=False, unique=True)
-    # password = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     address = Column(String)
     phone = Column(String)
     advertisements = relationship("DbAdvertisement", back_populates="user")
-    rate_giving = relationship("DbRating", back_populates="rater_user")
+    purchases = relationship(
+        "DbTransaction",
+        back_populates="buyer",
+        foreign_keys=lambda: [DbTransaction.buyer_id],
+    )
 
 
 # advertisement table
@@ -53,7 +63,7 @@ class DbAdvertisement(Base):
     category_id = Column(Integer, ForeignKey("category.id"))
     user = relationship("DbUser", back_populates="advertisements")
     category = relationship("DbCategory", back_populates="advertisements")
-    rating = relationship("DbRating", back_populates="reted_ads")
+    transaction = relationship("DbTransaction", back_populates="advertisement")
 
 
 # category table
@@ -65,15 +75,24 @@ class DbCategory(Base):
     advertisements = relationship("DbAdvertisement", back_populates="category")
 
 
-# Rating table
+# transaction table
+class DbTransaction(Base):
+    __tablename__ = "transactions"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    buyer_id = Column(String, ForeignKey("user.id"), nullable=False)
+    advertisement_id = Column(Integer, ForeignKey("advertisement.id"), nullable=False)
+    completed = Column(Boolean, default=False)
+    buyer = relationship("DbUser", foreign_keys=[buyer_id], back_populates="purchases")
+    advertisement = relationship("DbAdvertisement", back_populates="transaction")
+    rating = relationship("DbRating", back_populates="transaction")
 
 
+# rating table
 class DbRating(Base):
-    __tablename__ = "rating"
-
-    id = Column(Integer, primary_key=True, index=True)
-    score = Column(Integer)
-    rater_id = Column(Integer, ForeignKey("user.id"))
-    advertisement_id = Column(Integer, ForeignKey("advertisement.id"))
-    rater_user = relationship("DbUser", back_populates="rate_giving")
-    reted_ads = relationship("DbAdvertisement", back_populates="rating")
+    __tablename__ = "ratings"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    transaction_id = Column(String, ForeignKey("transactions.id"), nullable=False)
+    score_type = Column(SqlEnum(ScoreTypeEnum), nullable=False)
+    score = Column(Integer, nullable=False)
+    comment = Column(Text)
+    transaction = relationship("DbTransaction", back_populates="rating")

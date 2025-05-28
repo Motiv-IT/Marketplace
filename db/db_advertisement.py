@@ -4,12 +4,13 @@ from sqlalchemy import func
 from typing import Optional
 from fastapi import HTTPException, status
 from db.database import get_db
-from db.model import DbAdvertisement, DbCategory, DbUser, DbRating
+from db.model import DbAdvertisement, DbCategory, DbUser, DbRating, DbTransaction
 from schemas import (
     AdvertisementBase,
     AdvertisementEditBase,
     AdvertisementStatusDisplay,
 )
+from db.model import ScoreTypeEnum
 
 
 # -----------search for desired ads by searching on keyword and filtering by category_id--------
@@ -17,28 +18,36 @@ from schemas import (
 def get_filtered_advertisements(
     db: Session, keyword: Optional[str] = None, category_id: Optional[int] = None
 ):
-    query = (
-        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
-        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)\
-        .filter(DbAdvertisement.status == "OPEN")\
-        .group_by(DbAdvertisement.id)
+    subquery = (
+        db.query(
+            DbAdvertisement.user_id.label("seller_id"),
+            func.avg(DbRating.score).label("avg_seller_score"),
+        )
+        .join(DbTransaction, DbTransaction.advertisement_id == DbAdvertisement.id)
+        .join(DbRating, DbRating.transaction_id == DbTransaction.id)
+        .where(DbRating.score_type == ScoreTypeEnum.SELLER_SCORE)
+        .group_by(DbAdvertisement.user_id)
+        .subquery()
     )
-
+    query = db.query(DbAdvertisement, subquery.c.avg_seller_score).outerjoin(
+        subquery, DbAdvertisement.user_id == subquery.c.seller_id
+    )
     if keyword:
         query = query.filter(
-            (DbAdvertisement.title.ilike(f"%{keyword}%"))
-            | (DbAdvertisement.content.ilike(f"%{keyword}%"))
+            DbAdvertisement.title.ilike(f"%{keyword}%")
+            | DbAdvertisement.content.ilike(f"%{keyword}%")
         )
+
     if category_id:
         query = query.filter(DbAdvertisement.category_id == category_id)
 
-    advertisement = query.order_by(
-        DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc()
+    ads = query.order_by(
+        DbAdvertisement.created_at.desc(),
+        subquery.c.avg_seller_score.desc().nullslast(),
     ).all()
 
     return [
-        {"advertisement": ad, "average_rating": avg_rating}
-        for ad, avg_rating in advertisement
+        {"advertisement": ad, "average_rating": avg_score or 0} for ad, avg_score in ads
     ]
 
 
@@ -80,36 +89,55 @@ def create_advertisement(db: Session, request: AdvertisementBase):
 
 # selecting all advertisements which are ranked by recency and user rating
 def get_all_advertisements(db: Session):
-    result = (
-        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
-        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
-        .group_by(DbAdvertisement.id)
-        .order_by(DbAdvertisement.created_at.desc(), func.avg(DbRating.score).desc())
+    subquery = (
+        db.query(
+            DbAdvertisement.user_id.label("seller_id"),
+            func.avg(DbRating.score).label("avg_seller_score"),
+        )
+        .join(DbTransaction, DbTransaction.advertisement_id == DbAdvertisement.id)
+        .join(DbRating, DbRating.transaction_id == DbTransaction.id)
+        .where(DbRating.score_type == ScoreTypeEnum.SELLER_SCORE)
+        .group_by(DbAdvertisement.user_id)
+        .subquery()
+    )
+
+    # Main query to get ads and join with avg score per seller
+    ads = (
+        db.query(DbAdvertisement, subquery.c.avg_seller_score)
+        .outerjoin(subquery, DbAdvertisement.user_id == subquery.c.seller_id)
+        .order_by(
+            DbAdvertisement.created_at.desc(),
+            subquery.c.avg_seller_score.desc().nullslast(),
+        )
         .all()
     )
-    
 
-    return [
-        {"advertisement": ad, "average_rating": avg_rating} for ad, avg_rating in result
-    ]
+    return [{"advertisement": ad, "average_rating": avg_score} for ad, avg_score in ads]
 
 
 # selecting one  advertisement
 def get_one_advertisement(id: int, db: Session):
-    advertisement = (
-        db.query(DbAdvertisement, func.avg(DbRating.score).label("average_rating"))
-        .outerjoin(DbRating, DbAdvertisement.id == DbRating.advertisement_id)
+    subquery = (
+        db.query(
+            DbAdvertisement.user_id.label("seller_id"),
+            func.avg(DbRating.score).label("avg_seller_score"),
+        )
+        .join(DbTransaction, DbTransaction.advertisement_id == DbAdvertisement.id)
+        .join(DbRating, DbRating.transaction_id == DbTransaction.id)
+        .where(DbRating.score_type == ScoreTypeEnum.SELLER_SCORE)
+        .group_by(DbAdvertisement.user_id)
+        .subquery()
+    )
+    result = (
+        db.query(DbAdvertisement, subquery.c.avg_seller_score)
+        .outerjoin(subquery, DbAdvertisement.user_id == subquery.c.seller_id)
         .filter(DbAdvertisement.id == id)
-        .group_by(DbAdvertisement.id)
         .first()
     )
-    if not advertisement:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Advertisement with id {id} does not exist",
-        )
-    ad, avg_rating = advertisement
-    return {"advertisement": ad, "average_rating": avg_rating}
+    if not result:
+        raise HTTPException(status_code=404, detail="Ads not found")
+    ad, avg_score = result
+    return {"advertisement": ad, "average_rating": avg_score or 0}
 
 
 # editing one advertisement

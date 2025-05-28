@@ -141,13 +141,6 @@ AdvertisementDisplay.model_rebuild()
 CategoryDisplay.model_rebuild()
 
 
-# ----------Rating Schemas---------
-class RatingBase(BaseModel):
-    score: int = Field(..., ge=1, le=5)
-    rater_id: int
-    advertisement_id: int
-
-
 class AdvertisementWithRating(BaseModel):
     advertisement: AdvertisementDisplay
     average_rating: Optional[float]

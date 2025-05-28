@@ -18,10 +18,24 @@ router = APIRouter(prefix="/advertisement", tags=["Advertisement"])
 
 
 # ----------search for desired ads by searching on keyword and filtering by category_id------------------
+# @router.get(
+#     "/search",
+#     summary="Search Ads by Keyword + Category",
+#     description="this API call enables user to serach by keyword and filter by category",
+#     response_model=List[AdvertisementWithRating],
+# )
+# def get_filtered_advertisements(
+#     search: Optional[str] = None,
+#     category_id: Optional[int] = None,
+#     db: Session = Depends(get_db),
+# ):
+#     return db_advertisement.get_filtered_advertisements(db, search, category_id)
+
+
 @router.get(
     "/search",
     summary="Search Ads by Keyword + Category",
-    description="this API call enables user to serach by keyword and filter by category",
+    description="This API call enables users to search by keyword and filter by category. Results are sorted by recency and seller rating.",
     response_model=List[AdvertisementWithRating],
 )
 def get_filtered_advertisements(
