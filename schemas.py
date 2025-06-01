@@ -14,15 +14,26 @@ class UserCreate(BaseModel):
     class Config:
         orm_mode = True
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
 
+#______________  i add this below new code to now to counter my erroor in my test______sayed 
 class UserOut(BaseModel):
     id: int
     username: str
+    email: str   # <-- i add this line to fix the KeyError
+
     class Config:
         orm_mode = True
+
+#___________ its first line of code before using test______
+# class UserLogin(BaseModel):
+#     email: EmailStr
+#     password: str
+
+# class UserOut(BaseModel):
+#     id: int
+#     username: str
+#     class Config:
+#         orm_mode = True
 
 #----------advertisement schemas------------
 class StatusAdvertisementEnum(str, enum.Enum):

@@ -15,3 +15,5 @@ fastapi==0.95.2
 uvicorn[standard]==0.22.0
 sqlalchemy==2.0.15
 pydantic==1.10.12
+request
+pytest
