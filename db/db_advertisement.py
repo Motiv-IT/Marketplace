@@ -1,10 +1,11 @@
 import os
 import shutil
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from sqlalchemy.orm.session import Session
 from typing import Optional
 from fastapi import HTTPException, UploadFile, status
-from db.model import DbAdvertisement, DbCategory, DbImage, DbUser
+from db.model import DbAdvertisement, DbCategory, DbImage, DbUser, DbRating, DbTransaction
 
 from schemas import (
     AdvertisementBase,
@@ -15,54 +16,42 @@ from schemas import (
 )
 from router.auth import get_current_user
 
-# ---------- get ads based on search by keabord-------------
-def get_searched_advertisements(db: Session, keyword: str):
-    ads = (
-        db.query(DbAdvertisement)
-        .filter(
-            DbAdvertisement.title.ilike(f"%{keyword}%")
-            | DbAdvertisement.content.ilike(f"%{keyword}%")
-        )
-        .order_by(DbAdvertisement.created_at.desc())
-        .all()
-    )
-
-    return ads
-
-
-# ----------- get ads based on filter on category------------
-def get_category_filtered_advertisements(db: Session, category_id: int):
-    ads = (
-        db.query(DbAdvertisement)
-        .filter(DbAdvertisement.category_id == category_id)
-        .order_by(DbAdvertisement.created_at.desc())
-        .all()
-    )
-
-    return ads
-
-
-# ----------- get ads based on recency--------------
-def get_sorted_advertisements(db: Session):
-    return db.query(DbAdvertisement).order_by(DbAdvertisement.created_at.desc()).all()
-
-
-# -----------get ads by combining search by keyword and filtering by category and sorting by recency--------
+# -----------search for desired ads by searching on keyword and filtering by category_id--------
+# -----------------------the result is sorted by recency and rating------------------------------
 def get_filtered_advertisements(
     db: Session, keyword: Optional[str] = None, category_id: Optional[int] = None
 ):
-    query = db.query(DbAdvertisement)
-
+    subquery = (
+        db.query(
+            DbAdvertisement.user_id.label("seller_id"),
+            func.avg(DbRating.score).label("avg_seller_score"),
+        )
+        .join(DbTransaction, DbTransaction.advertisement_id == DbAdvertisement.id)
+        .join(DbRating, DbRating.transaction_id == DbTransaction.id)
+        .where(DbRating.ratee_id == DbTransaction.seller_id)
+        .group_by(DbAdvertisement.user_id)
+        .subquery()
+    )
+    query = db.query(DbAdvertisement, subquery.c.avg_seller_score).outerjoin(
+        subquery, DbAdvertisement.user_id == subquery.c.seller_id
+    )
     if keyword:
         query = query.filter(
-            (DbAdvertisement.title.ilike(f"%{keyword}%"))
-            | (DbAdvertisement.content.ilike(f"%{keyword}%"))
+            DbAdvertisement.title.ilike(f"%{keyword}%")
+            | DbAdvertisement.content.ilike(f"%{keyword}%")
         )
+
     if category_id:
         query = query.filter(DbAdvertisement.category_id == category_id)
-    ads = query.order_by(DbAdvertisement.created_at.desc()).all()
 
-    return ads
+    ads = query.order_by(
+        DbAdvertisement.created_at.desc(),
+        subquery.c.avg_seller_score.desc().nullslast(),
+    ).all()
+
+    return [
+        {"advertisement": ad, "average_rating": avg_score or 0} for ad, avg_score in ads
+    ]
 
 
 # creating one advertisement
@@ -96,8 +85,30 @@ def create_advertisement(db: Session, request: AdvertisementBase,current_user_id
 
 # selecting all advertisements
 def get_all_advertisements(db: Session):
-    advertisements = db.query(DbAdvertisement).order_by(DbAdvertisement.category_id.asc()).all()
-    return advertisements
+    subquery = (
+        db.query(
+            DbAdvertisement.user_id.label("seller_id"),
+            func.avg(DbRating.score).label("avg_seller_score"),
+        )
+        .join(DbTransaction, DbTransaction.advertisement_id == DbAdvertisement.id)
+        .join(DbRating, DbRating.transaction_id == DbTransaction.id)
+        .where(DbRating.ratee_id == DbTransaction.seller_id)
+        .group_by(DbAdvertisement.user_id)
+        .subquery()
+    )
+
+    # Main query to get ads and join with avg score per seller
+    ads = (
+        db.query(DbAdvertisement, subquery.c.avg_seller_score)
+        .outerjoin(subquery, DbAdvertisement.user_id == subquery.c.seller_id)
+        .order_by(
+            DbAdvertisement.created_at.desc(),
+            subquery.c.avg_seller_score.desc().nullslast(),
+        )
+        .all()
+    )
+
+    return [{"advertisement": ad, "average_rating": avg_score or 0} for ad, avg_score in ads]
 
 
 # selecting one  advertisement
