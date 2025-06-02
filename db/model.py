@@ -23,10 +23,12 @@ class DbUser (Base):
     hashed_password = Column(String, nullable=False)
     address = Column(String)
     phone = Column(String)
-    advertisements = relationship('DbAdvertisement', back_populates='user')
-    given_ratings = relationship("Rating", foreign_keys="Rating.rater_id", back_populates="rater")
-    received_ratings = relationship("Rating", foreign_keys="Rating.ratee_id", back_populates="ratee")
-
+    advertisements   = relationship("DbAdvertisement", back_populates="user", cascade="all, delete-orphan")
+    given_ratings    = relationship("Rating", foreign_keys="Rating.rater_id", back_populates="rater", cascade="all, delete-orphan")
+    received_ratings = relationship("Rating", foreign_keys="Rating.ratee_id", back_populates="ratee", cascade="all, delete-orphan")
+    purchases        = relationship("Transaction", foreign_keys="Transaction.buyer_id", back_populates="buyer", cascade="all, delete-orphan")
+    sales            = relationship("Transaction", foreign_keys="Transaction.seller_id", back_populates="seller", cascade="all, delete-orphan")
+    
 # advertisement table
 class DbAdvertisement(Base):
     __tablename__ = 'advertisement'
@@ -40,6 +42,8 @@ class DbAdvertisement(Base):
     category_id = Column(Integer, ForeignKey('category.id'))
     user = relationship('DbUser', back_populates='advertisements')
     category = relationship('DbCategory', back_populates='advertisements')
+    transactions  = relationship("Transaction",  foreign_keys="Transaction.advertisement_id" , back_populates="advertisement", cascade="all, delete-orphan")
+
 
 #category table
 class DbCategory(Base):
@@ -56,9 +60,13 @@ class Transaction(Base):
     buyer_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     completed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    advertisement_id = Column(Integer, ForeignKey("advertisement.id"), nullable=False)
 
-    buyer = relationship("DbUser", foreign_keys=[buyer_id], backref="purchases")
-    seller = relationship("DbUser", foreign_keys=[seller_id], backref="sales")
+    buyer         = relationship("DbUser",         foreign_keys=[buyer_id],         back_populates="purchases")
+    seller        = relationship("DbUser",         foreign_keys=[seller_id],        back_populates="sales")
+    advertisement = relationship("DbAdvertisement", foreign_keys=[advertisement_id], back_populates="transactions")
+    ratings       = relationship("Rating",          foreign_keys="Rating.transaction_id", back_populates="transaction", cascade="all, delete-orphan")
     
 class Rating(Base):
     __tablename__ = "ratings"
@@ -71,5 +79,6 @@ class Rating(Base):
 
     rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
     ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
+    transaction   = relationship("Transaction", foreign_keys=[transaction_id] , backref="ratings")
     
 # Tina Sprint2 end

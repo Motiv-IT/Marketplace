@@ -123,3 +123,20 @@ class RatingOut(BaseModel):
     score: int
     comment: Optional[str]
     model_config = ConfigDict(from_attributes=True)
+    
+
+#--------------- transactions Schemas ---------
+#----------Tina sprint2-------------
+class TransactionCreate(BaseModel):
+    buyer_id: int
+    advertisement_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class TransactionRead(BaseModel):
+    id: int
+    buyer_id: int
+    seller_id: int
+    advertisement_id: int
+    completed: bool
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
