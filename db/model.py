@@ -52,7 +52,7 @@ class DbCategory(Base):
 #Tina Sprint2 beginning
 class Transaction(Base):
     __tablename__ = "transactions"
-    id = Column(Integer, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(Integer, primary_key=True) #remove default=lambda: str(uuid.uuid4()) to avoid type mismatch.
     buyer_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     completed = Column(Boolean, default=False)
@@ -62,7 +62,7 @@ class Transaction(Base):
     
 class Rating(Base):
     __tablename__ = "ratings"
-    id = Column(Integer, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(Integer, primary_key=True) #remove default=lambda: str(uuid.uuid4()) to avoid type mismatch.
     transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
     rater_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     ratee_id = Column(Integer, ForeignKey("user.id"), nullable=False)
