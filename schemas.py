@@ -128,9 +128,10 @@ class RatingOut(BaseModel):
 #--------------- transactions Schemas ---------
 #----------Tina sprint2-------------
 class TransactionCreate(BaseModel):
-    buyer_id: int
     advertisement_id: int
+    completed: bool                 
     model_config = ConfigDict(from_attributes=True)
+
 
 class TransactionRead(BaseModel):
     id: int

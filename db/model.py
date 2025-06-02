@@ -63,10 +63,10 @@ class Transaction(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     advertisement_id = Column(Integer, ForeignKey("advertisement.id"), nullable=False)
 
-    buyer         = relationship("DbUser",         foreign_keys=[buyer_id],         back_populates="purchases")
-    seller        = relationship("DbUser",         foreign_keys=[seller_id],        back_populates="sales")
+    buyer         = relationship("DbUser",  foreign_keys=[buyer_id],         back_populates="purchases")
+    seller        = relationship("DbUser", foreign_keys=[seller_id],        back_populates="sales")
     advertisement = relationship("DbAdvertisement", foreign_keys=[advertisement_id], back_populates="transactions")
-    ratings       = relationship("Rating",          foreign_keys="Rating.transaction_id", back_populates="transaction", cascade="all, delete-orphan")
+    ratings       = relationship("Rating", foreign_keys="Rating.transaction_id", back_populates="transaction", cascade="all, delete-orphan")
     
 class Rating(Base):
     __tablename__ = "ratings"
@@ -79,6 +79,6 @@ class Rating(Base):
 
     rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
     ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
-    transaction   = relationship("Transaction", foreign_keys=[transaction_id] , backref="ratings")
+    transaction   = relationship("Transaction", foreign_keys=[transaction_id] , back_populates="ratings")
     
 # Tina Sprint2 end

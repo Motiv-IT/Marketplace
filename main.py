@@ -19,15 +19,3 @@ app.include_router(chat.router)
 app.include_router(rating_router)
 app.include_router(transactions.router)
 
-
-
-
-
-
-
-
-
-
-
-
-
