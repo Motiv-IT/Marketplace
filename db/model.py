@@ -16,7 +16,7 @@ class StatusAdvertisementEnum(str, enum.Enum):
 # user table
 class DbUser (Base):
     __tablename__ = 'user'
-    id = Column(Integer, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    id = Column(Integer, primary_key=True, index=True) #remove default=lambda: str(uuid.uuid4()) to avoid type mismatch.
     username = Column(String, nullable=False)
     email = Column(String, index=True, nullable=False, unique=True)
     # password = Column(String, nullable=False)
@@ -53,23 +53,23 @@ class DbCategory(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    buyer_id = Column(String, ForeignKey("user.id"), nullable=False)
-    seller_id = Column(String, ForeignKey("user.id"), nullable=False)
+    buyer_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    seller_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     completed = Column(Boolean, default=False)
 
-    buyer = relationship("User", foreign_keys=[buyer_id], backref="purchases")
-    seller = relationship("User", foreign_keys=[seller_id], backref="sales")
+    buyer = relationship("DbUser", foreign_keys=[buyer_id], backref="purchases")
+    seller = relationship("DbUser", foreign_keys=[seller_id], backref="sales")
     
 class Rating(Base):
     __tablename__ = "ratings"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    transaction_id = Column(String, ForeignKey("transactions.id"), nullable=False)
-    rater_id = Column(String, ForeignKey("user.id"), nullable=False)
-    ratee_id = Column(String, ForeignKey("user.id"), nullable=False)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    rater_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    ratee_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     score = Column(Integer, nullable=False)
     comment = Column(Text)
 
-    rater = relationship("User", foreign_keys=[rater_id], back_populates="given_ratings")
-    ratee = relationship("User", foreign_keys=[ratee_id], back_populates="received_ratings")
+    rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
+    ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
     
 # Tina Sprint2 end
