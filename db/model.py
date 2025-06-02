@@ -24,10 +24,10 @@ class DbUser (Base):
     address = Column(String)
     phone = Column(String)
     advertisements   = relationship("DbAdvertisement", back_populates="user", cascade="all, delete-orphan")
-    given_ratings    = relationship("Rating", foreign_keys="Rating.rater_id", back_populates="rater", cascade="all, delete-orphan")
-    received_ratings = relationship("Rating", foreign_keys="Rating.ratee_id", back_populates="ratee", cascade="all, delete-orphan")
-    purchases        = relationship("Transaction", foreign_keys="Transaction.buyer_id", back_populates="buyer", cascade="all, delete-orphan")
-    sales            = relationship("Transaction", foreign_keys="Transaction.seller_id", back_populates="seller", cascade="all, delete-orphan")
+    given_ratings    = relationship("DbRating", foreign_keys="DbRating.rater_id", back_populates="rater", cascade="all, delete-orphan")
+    received_ratings = relationship("DbRating", foreign_keys="DbRating.ratee_id", back_populates="ratee", cascade="all, delete-orphan")
+    purchases        = relationship("DbTransaction", foreign_keys="DbTransaction.buyer_id", back_populates="buyer", cascade="all, delete-orphan")
+    sales            = relationship("DbTransaction", foreign_keys="DbTransaction.seller_id", back_populates="seller", cascade="all, delete-orphan")
     
 # advertisement table
 class DbAdvertisement(Base):
@@ -43,7 +43,7 @@ class DbAdvertisement(Base):
     user = relationship('DbUser', back_populates='advertisements')
     category = relationship('DbCategory', back_populates='advertisements')
     images = relationship('DbImage', back_populates='advertisement',order_by='DbImage.order_id.asc()', cascade="all, delete-orphan")
-    transactions  = relationship("Transaction",  foreign_keys="Transaction.advertisement_id" , back_populates="advertisement", cascade="all, delete-orphan")
+    transactions  = relationship("DbTransaction",  foreign_keys="DbTransaction.advertisement_id" , back_populates="advertisement", cascade="all, delete-orphan")
 
 
 #category table
@@ -64,7 +64,7 @@ class DbImage(Base):
     advertisement_id = Column(Integer, ForeignKey("advertisement.id"))
     advertisement = relationship('DbAdvertisement', back_populates='images')
 #Tina Sprint2 beginning
-class Transaction(Base):
+class DbTransaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True) #remove default=lambda: str(uuid.uuid4()) to avoid type mismatch.
     buyer_id = Column(Integer, ForeignKey("user.id"), nullable=False)
@@ -76,9 +76,9 @@ class Transaction(Base):
     buyer         = relationship("DbUser",  foreign_keys=[buyer_id],         back_populates="purchases")
     seller        = relationship("DbUser", foreign_keys=[seller_id],        back_populates="sales")
     advertisement = relationship("DbAdvertisement", foreign_keys=[advertisement_id], back_populates="transactions")
-    ratings       = relationship("Rating", foreign_keys="Rating.transaction_id", back_populates="transaction", cascade="all, delete-orphan")
+    ratings       = relationship("DbRating", foreign_keys="DbRating.transaction_id", back_populates="transaction", cascade="all, delete-orphan")
     
-class Rating(Base):
+class DbRating(Base):
     __tablename__ = "ratings"
     id = Column(Integer, primary_key=True) #remove default=lambda: str(uuid.uuid4()) to avoid type mismatch.
     transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
@@ -89,7 +89,7 @@ class Rating(Base):
 
     rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
     ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
-    transaction   = relationship("Transaction", foreign_keys=[transaction_id] , back_populates="ratings")
+    transaction   = relationship("DbTransaction", foreign_keys=[transaction_id] , back_populates="ratings")
     
 # Tina Sprint2 end
 

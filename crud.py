@@ -1,18 +1,18 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from db.model import Rating, Transaction
+from db.model import DbRating, DbTransaction
 from schemas import RatingCreate
 def create_rating(db: Session, rating: RatingCreate):
-    transaction = db.query(Transaction).filter(Transaction.id == rating.transaction_id).first()
+    transaction = db.query(DbTransaction).filter(DbTransaction.id == rating.transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     if not transaction.completed:
         raise HTTPException(status_code=400, detail="Transaction not completed")
 
-    existing_rating = db.query(Rating).filter(
-        Rating.transaction_id == rating.transaction_id,
-        Rating.rater_id == rating.rater_id
+    existing_rating = db.query(DbRating).filter(
+        DbRating.transaction_id == rating.transaction_id,
+        DbRating.rater_id == rating.rater_id
     ).first()
     if existing_rating:
         raise HTTPException(status_code=400, detail="Rating already exists for this transaction")
@@ -24,7 +24,7 @@ def create_rating(db: Session, rating: RatingCreate):
     else:
         raise HTTPException(status_code=403, detail="Rater is not involved in this transaction")
 
-    new_rating = Rating(
+    new_rating = DbRating(
         transaction_id=rating.transaction_id,
         rater_id=rating.rater_id,
         ratee_id=ratee_id,
@@ -37,4 +37,4 @@ def create_rating(db: Session, rating: RatingCreate):
     return new_rating
 
 def get_ratings_for_user(db: Session, user_id: str):
-    return db.query(Rating).filter(Rating.ratee_id == user_id).all()
+    return db.query(DbRating).filter(DbRating.ratee_id == user_id).all()

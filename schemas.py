@@ -170,16 +170,15 @@ AdvertisementOneDisplay.model_rebuild()
 #----------Sayed sprint2-------------
 
 class RatingCreate(BaseModel):
-    transaction_id: str
-    rater_id: str
+    transaction_id: int
+    rater_id: int
     score: int
     comment: Optional[str] = None
 
 class RatingOut(BaseModel):
-    id: str
-    transaction_id: str
-    rater_id: str
-    ratee_id: str
+    transaction_id: int
+    rater_id: int
+    ratee_id: int
     score: int
     comment: Optional[str]
     model_config = ConfigDict(from_attributes=True)
@@ -201,3 +200,10 @@ class TransactionRead(BaseModel):
     completed: bool
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+class AdvertisementWithRating(BaseModel):
+    advertisement: AdvertisementDisplay
+    average_rating: Optional[float]
+
+    class Config:
+        orm_mode = True    

@@ -2,7 +2,7 @@ import os
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from router.auth import get_current_user
-from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementOneDisplay, AdvertisementStatusDisplay,AdvertisementShortDisplay
+from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementOneDisplay, AdvertisementStatusDisplay,AdvertisementShortDisplay, AdvertisementWithRating
 from db import db_advertisement
 from typing import List, Optional
 from db.database import get_db
@@ -14,29 +14,23 @@ router = APIRouter(
     prefix='/advertisements',
     tags=['Advertisements']
 )
-#------- get list of searched ads by keyword------------
-@router.get('/search/keyword', summary='Search Ads by keyword',
-            description='this API call enables user to search by keybords', response_model=List[AdvertisementDisplay])
-def get_searched_advertisements(search: str, db: Session = Depends(get_db)):
-    return db_advertisement.get_searched_advertisements(db, search)
 
-#--------get list of serached ads by category-----------
-@router.get('/search/category', summary='Search Ads by Category',
-            description='this API call enables user to filter by category',
-            response_model=List[AdvertisementDisplay])
-def get_filtered_advertisements(category_id: int, db: Session = Depends(get_db)):
-    return db_advertisement.get_category_filtered_advertisements(db, category_id )
 
-#--------- get list of sorted by date of creation ads----------
-@router.get('/sorted_by_date', response_model=List[AdvertisementDisplay])
-def get_sorted_advertisements(db: Session = Depends(get_db)):
-    return db_advertisement.get_sorted_advertisements(db)
 
-#----------get list of combined filtered ads------------------
-@router.get('/search/category-keyword', summary='Search Ads by Keyword + Category',
-            description='this API call enables user to serach by keyword and filter by category',
-            response_model=List[AdvertisementDisplay])
-def get_filtered_advertisements(search: Optional[str] = None, category_id: Optional[int] = None, db: Session = Depends(get_db)):
+
+
+# ----------search for desired ads by searching on keyword and filtering by category_id------------------
+@router.get(
+    "/search",
+    summary="Search Ads by Keyword + Category",
+    description="This API call enables users to search by keyword and filter by category. Results are sorted by recency and seller rating.",
+    response_model=List[AdvertisementWithRating],
+)
+def get_filtered_advertisements(
+    search: Optional[str] = None,
+    category_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
     return db_advertisement.get_filtered_advertisements(db, search, category_id)
 
 
@@ -47,7 +41,7 @@ def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db), u
     return  db_advertisement.create_advertisement(db,request,user_id)
 
 #selecting all advertisements
-@router.get('/all',response_model=List[AdvertisementShortDisplay])
+@router.get('/all',response_model=List[AdvertisementWithRating])
 def get_all_advertisements(db:Session=Depends(get_db)):
     return db_advertisement.get_all_advertisements(db)
 

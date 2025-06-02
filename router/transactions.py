@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status, APIRouter
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
-from db.model import DbAdvertisement, Transaction, StatusAdvertisementEnum, DbUser
+from db.model import DbAdvertisement, DbTransaction, StatusAdvertisementEnum, DbUser
 from schemas import TransactionCreate, TransactionRead
 from router.auth import read_users_me
 
@@ -55,7 +55,7 @@ def purchase_advertisement(
     seller_id = ad.user_id
 
     # 6) Create the Transaction, using current_user.id as buyer_id
-    new_tx = Transaction(
+    new_tx = DbTransaction(
         buyer_id=buyer.id,
         seller_id=seller_id,
         advertisement_id=data.advertisement_id,
