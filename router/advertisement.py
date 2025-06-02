@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+import os
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from router.auth import get_current_user
-from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementStatusDisplay
+from schemas import AdvertisementBase, AdvertisementDisplay, AdvertisementEditBase, AdvertisementOneDisplay, AdvertisementStatusDisplay,AdvertisementShortDisplay
 from db import db_advertisement
 from typing import List, Optional
 from db.database import get_db
@@ -10,8 +11,8 @@ from sqlalchemy.orm.session import Session
 from utils.security import oauth2_scheme
 
 router = APIRouter(
-    prefix='/advertisement',
-    tags=['Advertisement']
+    prefix='/advertisements',
+    tags=['Advertisements']
 )
 #------- get list of searched ads by keyword------------
 @router.get('/search/keyword', summary='Search Ads by keyword',
@@ -38,18 +39,20 @@ def get_sorted_advertisements(db: Session = Depends(get_db)):
 def get_filtered_advertisements(search: Optional[str] = None, category_id: Optional[int] = None, db: Session = Depends(get_db)):
     return db_advertisement.get_filtered_advertisements(db, search, category_id)
 
+
+
 #creating one advertisement
 @router.post('/create',response_model=AdvertisementDisplay)
 def create_advertisement(request:AdvertisementBase,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
     return  db_advertisement.create_advertisement(db,request,user_id)
-   
+
 #selecting all advertisements
-@router.get('/all',response_model=List[AdvertisementDisplay])
+@router.get('/all',response_model=List[AdvertisementShortDisplay])
 def get_all_advertisements(db:Session=Depends(get_db)):
     return db_advertisement.get_all_advertisements(db)
 
 #selecting one advertisement
-@router.get('/{id}',response_model=AdvertisementDisplay)
+@router.get('/{id}',response_model=AdvertisementOneDisplay)
 def get_one_advertisement(id:int,db:Session=Depends(get_db)):
     return db_advertisement.get_one_advertisement(id,db)
 
@@ -67,3 +70,4 @@ def delete_advertisement(id:int,db:Session=Depends(get_db), user_id: int = Depen
 @router.patch('/{id}/status',response_model=AdvertisementStatusDisplay)
 def status_advertisement(id:int,request:AdvertisementStatusDisplay,db:Session=Depends(get_db), user_id: int = Depends(get_current_user)):
     return db_advertisement.status_advertisement(id,request,db,user_id)
+

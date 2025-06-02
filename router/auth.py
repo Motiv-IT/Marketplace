@@ -56,18 +56,18 @@ def logout(token: str = Depends(oauth2_scheme)):
 @router.get("/me", response_model=UserOut)
 def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     if token in blacklisted_tokens:
-        raise HTTPException(status_code=401, detail="Token has been revoked")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
         user = db.query(DbUser).filter(DbUser.email == email).first()
         if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         return user
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 
@@ -80,12 +80,12 @@ def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(g
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=401, detail="Token payload invalid")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token payload invalid")
 
         user = db.query(DbUser).filter(DbUser.email == email).first()
         if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         return user.id  # return actual user ID
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")

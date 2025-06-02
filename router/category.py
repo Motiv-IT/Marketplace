@@ -9,8 +9,8 @@ from schemas import CategoryBase, CategoryDisplay
 from utils.security import oauth2_scheme
 
 router=APIRouter(
-    prefix='/cat',
-    tags=["Category"]
+    prefix='/categories',
+    tags=["Categories"]
 )
 
 @router.post('/create',response_model=CategoryDisplay)

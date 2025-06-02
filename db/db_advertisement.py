@@ -1,8 +1,11 @@
+import os
+import shutil
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.session import Session
 from typing import Optional
-from fastapi import HTTPException, status
-from db.model import DbAdvertisement, DbCategory, DbUser
+from fastapi import HTTPException, UploadFile, status
+from db.model import DbAdvertisement, DbCategory, DbImage, DbUser
+
 from schemas import (
     AdvertisementBase,
     AdvertisementEditBase,
@@ -64,7 +67,7 @@ def get_filtered_advertisements(
 
 # creating one advertisement
 def create_advertisement(db: Session, request: AdvertisementBase,current_user_id:int):
-   
+
     category = db.query(DbCategory).filter(DbCategory.id == request.category_id).first()
     if not category:
         raise HTTPException(
@@ -76,7 +79,6 @@ def create_advertisement(db: Session, request: AdvertisementBase,current_user_id
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Price must be more than 0"
         )
-
     new_adv = DbAdvertisement(
         title=request.title,
         content=request.content,
@@ -94,7 +96,8 @@ def create_advertisement(db: Session, request: AdvertisementBase,current_user_id
 
 # selecting all advertisements
 def get_all_advertisements(db: Session):
-    return db.query(DbAdvertisement).all()
+    advertisements = db.query(DbAdvertisement).order_by(DbAdvertisement.category_id.asc()).all()
+    return advertisements
 
 
 # selecting one  advertisement
@@ -172,3 +175,4 @@ def status_advertisement(id: int, request: StatusChangeAdvertisementEnum, db: Se
     db.commit()
     db.refresh(advertisement)
     return advertisement
+

@@ -84,6 +84,7 @@ class AdvertisementBase(BaseModel):
     status: StatusAdvertisementEnum
     created_at: datetime
     category_id: int
+
     
 class AdvertisementDisplay(BaseModel):
     title: str
@@ -111,6 +112,8 @@ class AdvertisementStatusDisplay(BaseModel):
     class Config():
         orm_mode = True 
 #end Nataliia
+
+
 #----------category schemas----------
 class CategoryBase(BaseModel):
     title: str   
@@ -125,5 +128,53 @@ class CategoryDisplay(BaseModel):
 AdvertisementDisplay.model_rebuild()
 CategoryDisplay.model_rebuild()        
     
+#-----------images---------------#
+class ImageOrderDisplay(BaseModel):
+    id:int
+    new_order_id:int
+
+class ImageAllDisplay(BaseModel):
+    id:int
+    order_id:int
+    image_name:str
+    image_path: str
+    class Config():
+        orm_mode = True
+
+class ImageOneDisplay(BaseModel):
+    id:int
+    order_id:int
+    image_name:str
+    image_path: str
+    advertisement:Advertisement
+  
+    class Config():
+        orm_mode = True
 
 
+
+class Image(BaseModel):
+    order_id:int
+    image_name:str
+class AdvertisementOneDisplay(BaseModel):
+    title: str
+    content: str
+    price: float
+    status: StatusAdvertisementEnum
+    created_at: datetime
+    user: User
+    category: Category
+    images:List[Image]
+    class Config():
+        orm_mode = True 
+
+class AdvertisementShortDisplay(BaseModel):
+    title: str
+    price: float
+    status: StatusAdvertisementEnum
+    created_at: datetime
+    category:CategoryBase
+    class Config():
+        orm_mode = True 
+
+AdvertisementOneDisplay.model_rebuild()
