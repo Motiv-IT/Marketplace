@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from db.db_models import Rating, Transaction
+from db.model import Rating, Transaction
 from schemas import RatingCreate
 def create_rating(db: Session, rating: RatingCreate):
     transaction = db.query(Transaction).filter(Transaction.id == rating.transaction_id).first()
