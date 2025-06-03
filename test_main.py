@@ -63,14 +63,19 @@ def test_read_users_me():
     assert data["email"] == email
 
 def test_create_rating():
-    response, email = register_test_user()
-    token = login_test_user(email)
+    response1, email1, user_id1 = register_test_user()
+    response2, email2, user_id2 = register_test_user()
+    
+    token = login_test_user(email1)
+
     rating_data = {
         "transaction_id": "some-transaction-id",
-        "rater_id": email,
+        "rater_id": user_id1,
+        "ratee_id": user_id2,
         "score": 5,
         "comment": "Great transaction!"
     }
+
     response = client.post("/ratings/", json=rating_data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code in (200, 400, 404)
 
