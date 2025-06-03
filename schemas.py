@@ -171,7 +171,7 @@ AdvertisementOneDisplay.model_rebuild()
 
 class RatingCreate(BaseModel):
     transaction_id: int
-    rater_id: int
+    # buyer_id: int
     score: int
     comment: Optional[str] = None
 
