@@ -120,6 +120,11 @@ class ImageOrderDisplay(BaseModel):
     new_order_id:int
 
 class ImageAllDisplay(BaseModel):
+    order_id:int
+    image_path: str
+    class Config():
+        orm_mode = True
+class ImageAllChangeDisplay(BaseModel):
     id:int
     order_id:int
     image_name:str
@@ -130,6 +135,7 @@ class ImageAllDisplay(BaseModel):
 class ImageOneDisplay(BaseModel):
     id:int
     order_id:int
+    original_name:str
     image_name:str
     image_path: str
     advertisement:Advertisement
@@ -141,6 +147,7 @@ class ImageOneDisplay(BaseModel):
 
 class Image(BaseModel):
     order_id:int
+    original_name:str
     image_name:str
 class AdvertisementOneDisplay(BaseModel):
     title: str

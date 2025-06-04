@@ -1,11 +1,13 @@
 import os
 import shutil
+import uuid
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, UploadFile, status
 from db.model import DbAdvertisement, DbImage
 from schemas import ImageOrderDisplay, ImageAllDisplay
 
+UPLOAD_DIR = "uploaded_images"
 
 # add images to advertisement
 def add_image(id: int,image: UploadFile, db: Session, current_user_id: int):
@@ -25,17 +27,19 @@ def add_image(id: int,image: UploadFile, db: Session, current_user_id: int):
     if not max_order:
          max_order=0
     
-    UPLOAD_DIR = "uploaded_images"
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    image_path = os.path.join(UPLOAD_DIR, image.filename)
 
-    # Save the file synchronously
+    name, ext = os.path.splitext(image.filename)
+    unique_filename = f"{name}_{uuid.uuid4().hex}{ext}"
+    image_path = os.path.join(UPLOAD_DIR, unique_filename)
+
     with open(image_path, "wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
 
     image_record = DbImage(
         order_id=max_order+1,
-        image_name=image.filename,
+        original_name=image.filename,
+        image_name=unique_filename,
         image_path=image_path,
         image_type=image.content_type,
         advertisement_id=id
@@ -45,6 +49,17 @@ def add_image(id: int,image: UploadFile, db: Session, current_user_id: int):
     db.refresh(image_record)
 
     return image_record
+
+#show one image related to specific advertisement
+def get_one_image(id:int,db:Session):
+    image=db.query(DbImage).filter(DbImage.id==id).first()
+    if not image:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'Image with id {id} not found')
+
+    path=f'uploaded_images/{image.image_name}'
+    return path
+
 
 #show all images related to specific advertisement
 def get_all_images(id:int,db:Session):
@@ -56,10 +71,12 @@ def get_all_images(id:int,db:Session):
                  .filter(DbImage.advertisement_id==id)
                  .order_by(DbImage.order_id.asc())
                  .all())
+    if not all_images:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                             detail=f'Images for advertisement with id {id} are not found')   
     
     for image in all_images:
             image.image_path=f"http://127.0.0.1:8000/images/{image.image_name}"
-
     return all_images
 
 
@@ -69,7 +86,7 @@ def change_image_order(image_id:int,new_order:int,db:Session,current_user_id:int
     image=db.query(DbImage).filter(DbImage.id==image_id).first()
     if not image:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detal=f'Image with id {image_id} is not found')
+                            detail=f'Image with id {image_id} is not found')
    
     advertisement:DbAdvertisement=image.advertisement
     user_id=advertisement.user_id
@@ -82,7 +99,6 @@ def change_image_order(image_id:int,new_order:int,db:Session,current_user_id:int
          raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, 
                             detail='The order is the same')
     
-  
     max_order = (
         db.query(func.max(DbImage.order_id))
         .filter(DbImage.advertisement_id == advertisement.id)
@@ -94,7 +110,6 @@ def change_image_order(image_id:int,new_order:int,db:Session,current_user_id:int
                             detail=f'The new order_id should be  greater than 0 and less than {max_order}')
     
     repl_image=db.query(DbImage).filter(DbImage.order_id==new_order).first()
-
     if repl_image:
         repl_image.order_id = image.order_id
 
@@ -122,7 +137,7 @@ def delete_image(image_id:int,db:Session,current_user_id:int):
     image=db.query(DbImage).filter(DbImage.id==image_id).first()
     if not image:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detal=f'Image with id {image_id} not found')
+                            detail=f'Image with id {image_id} not found')
    
     advertisement:DbAdvertisement=image.advertisement
     user_id=advertisement.user_id
@@ -130,6 +145,14 @@ def delete_image(image_id:int,db:Session,current_user_id:int):
     if user_id!=current_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                             detail='No permission to modify this advertisement')
+    
+    image_path = image.image_path  
+    full_path = os.path.join(UPLOAD_DIR, os.path.basename(image_path))
+    if os.path.exists(full_path):
+        os.remove(full_path)
+    else:
+        print(f"File {full_path} not found, might already be deleted.")
+
     db.delete(image)
     db.commit()
     return {"message": f"Image with id {image_id} has been deleted"}
