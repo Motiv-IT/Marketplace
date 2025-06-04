@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from main import app
 
+
 client = TestClient(app)
 
 # Helper function to register a user with a unique email each time
@@ -63,19 +64,14 @@ def test_read_users_me():
     assert data["email"] == email
 
 def test_create_rating():
-    response1, email1, user_id1 = register_test_user()
-    response2, email2, user_id2 = register_test_user()
-    
-    token = login_test_user(email1)
-
+    response, email = register_test_user()
+    token = login_test_user(email)
     rating_data = {
         "transaction_id": "some-transaction-id",
-        "rater_id": user_id1,
-        "ratee_id": user_id2,
+        "rater_id": email,
         "score": 5,
         "comment": "Great transaction!"
     }
-
     response = client.post("/ratings/", json=rating_data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code in (200, 400, 404)
 

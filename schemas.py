@@ -124,8 +124,9 @@ class ImageAllDisplay(BaseModel):
     order_id:int
     image_name:str
     image_path: str
-    class Config():
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True
 
 class ImageOneDisplay(BaseModel):
     id:int
@@ -133,9 +134,10 @@ class ImageOneDisplay(BaseModel):
     image_name:str
     image_path: str
     advertisement:Advertisement
+    model_config = ConfigDict(from_attributes=True)
   
-    class Config():
-        orm_mode = True
+    # class Config():
+    #     orm_mode = True
 
 
 
@@ -151,8 +153,9 @@ class AdvertisementOneDisplay(BaseModel):
     user: User
     category: Category
     images:List[Image]
-    class Config():
-        orm_mode = True 
+    model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True 
 
 class AdvertisementShortDisplay(BaseModel):
     title: str
@@ -160,8 +163,10 @@ class AdvertisementShortDisplay(BaseModel):
     status: StatusAdvertisementEnum
     created_at: datetime
     category:CategoryBase
-    class Config():
-        orm_mode = True 
+
+    model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True 
 
 AdvertisementOneDisplay.model_rebuild()
 
@@ -204,6 +209,8 @@ class TransactionRead(BaseModel):
 class AdvertisementWithRating(BaseModel):
     advertisement: AdvertisementDisplay
     average_rating: Optional[float]
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True    
+    # class Config:
+    #     orm_mode = True    
+    
