@@ -11,6 +11,7 @@ from router import transactions
 
 app = FastAPI()
 app.mount("/images", StaticFiles(directory="uploaded_images"), name="images")
+UPLOAD_DIR = "uploaded_images"
 
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 Base.metadata.create_all(bind=engine)  # Create tables on startup
