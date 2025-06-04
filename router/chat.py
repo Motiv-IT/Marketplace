@@ -15,7 +15,7 @@ chat_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Chat</title>
+    <title>User Chat</title>
 </head>
 <body>
     <h1>Chat with another user</h1>
