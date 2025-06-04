@@ -120,25 +120,37 @@ class ImageOrderDisplay(BaseModel):
     new_order_id:int
 
 class ImageAllDisplay(BaseModel):
+    order_id:int
+    image_path: str
+    model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True
+class ImageAllChangeDisplay(BaseModel):
     id:int
     order_id:int
     image_name:str
     image_path: str
     model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True
 
 class ImageOneDisplay(BaseModel):
     id:int
     order_id:int
+    original_name:str
     image_name:str
     image_path: str
     advertisement:Advertisement
-  
     model_config = ConfigDict(from_attributes=True)
+  
+    # class Config():
+    #     orm_mode = True
 
 
 
 class Image(BaseModel):
     order_id:int
+    original_name:str
     image_name:str
 class AdvertisementOneDisplay(BaseModel):
     title: str
@@ -150,6 +162,8 @@ class AdvertisementOneDisplay(BaseModel):
     category: Category
     images:List[Image]
     model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True 
 
 class AdvertisementShortDisplay(BaseModel):
     title: str
@@ -158,6 +172,8 @@ class AdvertisementShortDisplay(BaseModel):
     created_at: datetime
     category:CategoryBase
     model_config = ConfigDict(from_attributes=True)
+    # class Config():
+    #     orm_mode = True 
 
 AdvertisementOneDisplay.model_rebuild()
 
@@ -167,7 +183,7 @@ AdvertisementOneDisplay.model_rebuild()
 
 class RatingCreate(BaseModel):
     transaction_id: int
-    rater_id: int
+    # buyer_id: int
     score: int
     comment: Optional[str] = None
 
@@ -200,5 +216,7 @@ class TransactionRead(BaseModel):
 class AdvertisementWithRating(BaseModel):
     advertisement: AdvertisementDisplay
     average_rating: Optional[float]
+    model_config = ConfigDict(from_attributes=True)
 
-    model_config = ConfigDict(from_attributes=True) 
+    # class Config:
+    #     orm_mode = True    

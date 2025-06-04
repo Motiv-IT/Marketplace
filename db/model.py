@@ -58,8 +58,9 @@ class DbImage(Base):
     __tablename__='image'
     id=Column(Integer,primary_key=True,index=True)
     order_id=Column(Integer)
-    image_name = Column(String, nullable=False)  # e.g. 'dog.png'
-    image_path = Column(String, nullable=False)  # e.g. '/uploads/dog.png'
+    original_name=Column(String,nullable=False)
+    image_name = Column(String, nullable=False) 
+    image_path = Column(String, nullable=False)  
     image_type=Column(String)
     advertisement_id = Column(Integer, ForeignKey("advertisement.id"))
     advertisement = relationship('DbAdvertisement', back_populates='images')
@@ -86,10 +87,9 @@ class DbRating(Base):
     ratee_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     score = Column(Integer, nullable=False)
     comment = Column(Text)
-
     rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
     ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
     transaction   = relationship("DbTransaction", foreign_keys=[transaction_id] , back_populates="ratings")
-    
+
 # Tina Sprint2 end
 

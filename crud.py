@@ -1,8 +1,10 @@
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from db.model import DbRating, DbTransaction
 from schemas import RatingCreate
-def create_rating(db: Session, rating: RatingCreate):
+
+def create_rating(db: Session, rating: RatingCreate, current_user: int):
     transaction = db.query(DbTransaction).filter(DbTransaction.id == rating.transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -10,23 +12,28 @@ def create_rating(db: Session, rating: RatingCreate):
     if not transaction.completed:
         raise HTTPException(status_code=400, detail="Transaction not completed")
 
+    if current_user != transaction.buyer_id and current_user != transaction.seller_id:
+        raise HTTPException(status_code=403, detail="User not involved in this transaction")
+
+    # Prevent duplicate rating by same user on same transaction
     existing_rating = db.query(DbRating).filter(
         DbRating.transaction_id == rating.transaction_id,
-        DbRating.rater_id == rating.rater_id
+        # DbRating.rater_id == current_user
     ).first()
     if existing_rating:
-        raise HTTPException(status_code=400, detail="Rating already exists for this transaction")
+        raise HTTPException(status_code=400, detail="You have already rated this transaction")
 
-    if rating.rater_id == transaction.buyer_id:
+    # Determine who is being rated
+    if current_user == transaction.buyer_id:
         ratee_id = transaction.seller_id
-    elif rating.rater_id == transaction.seller_id:
-        ratee_id = transaction.buyer_id
+        rater_id = transaction.buyer_id
     else:
-        raise HTTPException(status_code=403, detail="Rater is not involved in this transaction")
+        ratee_id = transaction.buyer_id
+        rater_id = transaction.seller_id
 
     new_rating = DbRating(
         transaction_id=rating.transaction_id,
-        rater_id=rating.rater_id,
+        rater_id=rater_id,
         ratee_id=ratee_id,
         score=rating.score,
         comment=rating.comment
@@ -36,5 +43,6 @@ def create_rating(db: Session, rating: RatingCreate):
     db.refresh(new_rating)
     return new_rating
 
-def get_ratings_for_user(db: Session, user_id: str):
+
+def get_ratings_for_user(db: Session, user_id: int):
     return db.query(DbRating).filter(DbRating.ratee_id == user_id).all()
