@@ -71,3 +71,28 @@ def purchase_advertisement(
     db.refresh(new_tx)
 
     return new_tx
+
+@router.get(
+    "/transactions/{transaction_id}",
+    response_model=TransactionRead,
+    status_code=status.HTTP_200_OK
+)
+def get_transaction(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: DbUser = Depends(read_users_me)
+):
+   
+    # 1) Fetch the transaction
+    tx: DbTransaction = db.query(DbTransaction).get(transaction_id)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    # 2) Ensure the current_user is either the buyer or the seller
+    if current_user.id not in (tx.buyer_id, tx.seller_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this transaction"
+        )
+
+    return tx
