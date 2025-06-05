@@ -19,6 +19,14 @@ def add_image(id: int,image: UploadFile, db: Session, current_user_id: int):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                             detail='No permission to modify this advertisement')
 
+    ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"}
+    name, ext = os.path.splitext(image.filename)
+    if ext.lower() not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported image format: {ext}. Allowed formats are: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+
     max_order = (
         db.query(func.max(DbImage.order_id))
         .filter(DbImage.advertisement_id == id)
@@ -26,6 +34,13 @@ def add_image(id: int,image: UploadFile, db: Session, current_user_id: int):
     )
     if not max_order:
          max_order=0
+    
+    MAX_NUMBER=5
+    if max_order>=MAX_NUMBER:
+          raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"There is limit of images: {MAX_NUMBER}"
+        )      
     
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
