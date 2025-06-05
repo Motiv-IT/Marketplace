@@ -86,6 +86,9 @@ class DbRating(Base):
     rater_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     ratee_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     score = Column(Integer, nullable=False)
+    
+    #define score type based on seller and buyer ratings
+    # score = Column(Enum("rater_score", "ratee_score", name="rating_score"), nullable=False)
     comment = Column(Text)
     rater = relationship("DbUser", foreign_keys=[rater_id], back_populates="given_ratings")
     ratee = relationship("DbUser", foreign_keys=[ratee_id], back_populates="received_ratings")
